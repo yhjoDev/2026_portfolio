@@ -1,0 +1,238 @@
+
+.sitemap-toggle {
+	position: fixed;
+	top: 3rem;
+	right: 3rem;
+	z-index: 500;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-text);
+	cursor: pointer;
+	opacity: 0.85;
+	transition: opacity 0.2s ease;
+	outline: none;
+}
+.sitemap-toggle svg{width:4rem; height:4rem;}
+
+.sitemap-toggle:hover,
+.sitemap-toggle:focus-visible {
+	opacity: 1;
+}
+
+.sitemap-toggle__label {
+	font-family: 'Pretendard', sans-serif;
+	font-size: 0.95rem;
+	letter-spacing: 0.05em;
+	white-space: nowrap;
+}
+
+html.modal-open .sitemap-toggle,
+html.sitemap-open .sitemap-toggle {
+	display: none;
+}
+
+@media (max-width: 700px) {
+	.sitemap-toggle {
+		top: 1.25rem;
+		right: 1.25rem;
+	}
+
+	.sitemap-toggle__label {
+		display: none;
+	}
+
+	.sitemap-toggle svg{width:3rem; height:3rem;}
+}
+
+.sitemap {
+	position: fixed;
+	inset: 0;
+	z-index: 930;
+	background: var(--color-bg);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+.sitemap.is-open {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity 0.35s ease;
+}
+
+.sitemap__close {
+	position: fixed;
+	top: 2rem;
+	right: 2rem;
+	z-index: 940;
+	width: 5rem;
+	height: 5rem;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--color-text);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	outline: none;
+	transition: background 0.2s ease;
+}
+
+.sitemap__close:hover,
+.sitemap__close:focus-visible {
+	background: rgba(217, 208, 190, 0.12);
+}
+
+.sitemap__columns {
+	height: 100%;
+	display: flex;
+	align-items: stretch;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.sitemap__columns::-webkit-scrollbar {
+	display: none;
+}
+
+.sitemap__col {
+	position: relative;
+	flex: 0 0 clamp(5rem, 6vw, 5.5rem);
+	height: 100%;
+	border: 0;
+	border-right: 1px solid rgba(255, 255, 255, 0.12);
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+	overflow: hidden;
+	transition: flex-basis 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sitemap__col:first-child {
+	border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sitemap__media {
+	position: absolute;
+	top: 2rem;
+	right: 1.5rem;
+	bottom: 2rem;
+	left: 5rem;
+	border-radius: 2rem;
+	background-size: cover;
+	background-position: 50% 50%;
+	opacity: 0;
+	transition: opacity 0.45s ease;
+}
+
+.sitemap__label-row {
+	position: absolute;
+	bottom: 2rem;
+	left: 2.75rem;
+	width: calc(100vh - 4rem);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-right: 2rem;
+	transform-origin: 0% 50%;
+	rotate: -90deg;
+}
+
+.sitemap__title {
+	white-space: nowrap;
+	font-family: 'Rix Yeoljeongdo', moret, serif;
+	font-style: italic;
+	font-weight: 400;
+	font-size: clamp(2rem, 2vw, 1.6rem);
+	letter-spacing: 0.1rem;
+	color: var(--color-gallery-title);
+	opacity: 0.35;
+	transition: opacity 0.3s ease;
+}
+
+.sitemap__tag {
+	white-space: nowrap;
+	font-family: 'Pretendard', sans-serif;
+	font-size: 1.2rem;
+	color: var(--color-text);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+@media (hover: hover) {
+	.sitemap__col:hover {
+		flex-basis: min(32rem, 60vw);
+	}
+
+	.sitemap__col:hover .sitemap__media,
+	.sitemap__col:hover .sitemap__tag,
+	.sitemap__col:hover .sitemap__title {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 1024px) {
+	.sitemap__columns {
+		flex-direction: column;
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+
+	.sitemap__col {
+		flex: 0 0 auto;
+		width: 100%;
+		height: auto;
+		border-right: 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	}
+
+	.sitemap__col:first-child {
+		border-left: 0;
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
+	}
+
+	.sitemap__col:hover {
+		flex-basis: auto;
+	}
+
+	.sitemap__media {
+		display: none;
+	}
+
+	.sitemap__label-row {
+		position: static;
+		width: 100%;
+		padding: 1.25rem;
+		transform-origin: initial;
+		rotate: 0deg;
+	}
+
+	.sitemap__title {
+		font-size: 1.15rem;
+		opacity: 1;
+	}
+
+	.sitemap__tag {
+		font-size: 0.85rem;
+		opacity: 0.6;
+	}
+
+	.sitemap__col:hover .sitemap__title,
+	.sitemap__col:hover .sitemap__tag {
+		opacity: 1;
+	}
+
+	.sitemap__close {
+		width: 3.5rem;
+		height: 3.5rem;
+		top: 1.25rem;
+		right: 1.25rem;
+	}
+}

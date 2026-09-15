@@ -9357,6 +9357,18 @@ var lscroll = new _locomotiveScroll.default({
   el: document.querySelector('[data-scroll-container]'),
   smooth: true,
   direction: 'horizontal',
+  tablet: {
+    // Locomotive의 tablet/smartphone 기본값은 direction:'vertical'이라, 이 옵션을
+    // 명시적으로 넘기지 않으면 태블릿/모바일에서는 라이브러리 내부적으로 세로
+    // 스와이프를 기다리는 상태가 된다 — 실제 레이아웃은 계속 가로로 넓은 갤러리라
+    // 터치 드래그·트랙패드 휠이 전혀 안 먹히던 원인이 이것이었다.
+    direction: 'horizontal',
+    gestureDirection: 'horizontal'
+  },
+  smartphone: {
+    direction: 'horizontal',
+    gestureDirection: 'horizontal'
+  },
   lerp: 0.07 // 스크롤/버튼 이동 시 목표 위치로 수렴하는 속도. 기본값 0.1보다
   // 낮출수록(0에 가까울수록) 느리고 부드럽게, 높일수록(1에 가까울수록)
   // 즉각적으로 움직인다. 휠·드래그·화살표 버튼 이동 전부 이 값을 같이 쓴다.

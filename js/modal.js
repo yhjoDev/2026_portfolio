@@ -24,6 +24,7 @@
   var section2El = modal.querySelector('#modalSection2');
   var section3El = modal.querySelector('#modalSection3');
   var sectionReveals = [];
+  var sectionVideos = [];
 
   var startRect = null;
   var lastTrigger = null;
@@ -71,8 +72,7 @@
       imagesWrap.className = 'modal__gallery-images';
       var images = Array.isArray(sectionData.images) ? sectionData.images : [];
       images.forEach(function (entry) {
-        // entry는 이미지 파일명 문자열이거나, { embed: "iframe src URL" } 형태의
-        // 임베드 항목일 수 있다 — Figma 등 외부 미리보기를 갤러리 사이에 끼워넣을 때 사용.
+
         if (entry && typeof entry === 'object' && entry.embed) {
           var embedWrap = document.createElement('div');
           embedWrap.className = 'modal__gallery-embed';
@@ -85,11 +85,93 @@
           imagesWrap.appendChild(embedWrap);
           return;
         }
+        if (entry && typeof entry === 'object' && entry.video) {
+          var videoWrap = document.createElement('div');
+          videoWrap.className = 'modal__gallery-video';
+          var video = document.createElement('video');
+          video.className = 'modal__gallery-video-el';
+          video.src = 'images/' + entry.video;
+
+          video.muted = true;
+          video.defaultMuted = true;
+          video.playsInline = true;
+          video.setAttribute('playsinline', '');
+          video.setAttribute('webkit-playsinline', '');
+          video.loop = true;
+          video.controls = true;
+          video.preload = 'metadata';
+          videoWrap.appendChild(video);
+
+          var toggleBtn = document.createElement('button');
+          toggleBtn.type = 'button';
+          toggleBtn.className = 'modal__gallery-video-toggle';
+          toggleBtn.setAttribute('aria-label', '재생/일시정지');
+          toggleBtn.innerHTML =
+            '<svg class="modal__gallery-video-icon modal__gallery-video-icon--play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+            '<svg class="modal__gallery-video-icon modal__gallery-video-icon--pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+          toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (video.paused) {
+              var playResult = video.play();
+              if (playResult && typeof playResult.catch === 'function') {
+                playResult.catch(function () {});
+              }
+            } else {
+              video.pause();
+            }
+          });
+
+          var hideTimer = null;
+          var HIDE_DELAY = 2200;
+
+          function showToggleBtn() {
+            toggleBtn.classList.remove('is-hidden');
+          }
+
+          function scheduleHideToggleBtn() {
+            clearTimeout(hideTimer);
+            if (video.paused) return;
+            hideTimer = setTimeout(function () {
+              toggleBtn.classList.add('is-hidden');
+            }, HIDE_DELAY);
+          }
+
+          videoWrap.addEventListener('mousemove', function () {
+            showToggleBtn();
+            scheduleHideToggleBtn();
+          });
+          videoWrap.addEventListener('mouseenter', function () {
+            showToggleBtn();
+            scheduleHideToggleBtn();
+          });
+          videoWrap.addEventListener('mouseleave', function () {
+            scheduleHideToggleBtn();
+          });
+          videoWrap.addEventListener('touchstart', function () {
+            showToggleBtn();
+            scheduleHideToggleBtn();
+          }, { passive: true });
+
+          video.addEventListener('play', function () {
+            toggleBtn.classList.add('is-playing');
+            scheduleHideToggleBtn();
+          });
+          video.addEventListener('pause', function () {
+            toggleBtn.classList.remove('is-playing');
+            clearTimeout(hideTimer);
+            showToggleBtn();
+          });
+          videoWrap.appendChild(toggleBtn);
+
+          imagesWrap.appendChild(videoWrap);
+          sectionVideos.push(video);
+          return;
+        }
         var img = document.createElement('img');
         img.className = 'modal__gallery-image';
         img.src = 'images/' + entry;
         img.alt = '';
-        img.loading = 'lazy'; // 모달 스크롤을 내려야 나오는 이미지는 그 시점에 불러오게
+        img.loading = 'lazy';
         imagesWrap.appendChild(img);
       });
       container.appendChild(imagesWrap);
@@ -101,7 +183,7 @@
     return null;
   }
 
-  function renderLinkButtons(container, links) {
+  function renderLinkButtons(container, links, withArrow) {
     if (!container) return;
     container.innerHTML = '';
     links.forEach(function (entry) {
@@ -111,7 +193,27 @@
       a.href = entry.href;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.textContent = entry.label || '사이트 보기';
+      if (withArrow) {
+
+        var label = document.createElement('span');
+        label.className = 'modal__link-label';
+        label.appendChild(document.createTextNode(entry.label || '사이트 보기'));
+        var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        arrow.setAttribute('class', 'modal__link-arrow');
+        arrow.setAttribute('viewBox', '0 0 24 24');
+        arrow.setAttribute('fill', 'none');
+        arrow.setAttribute('stroke', 'currentColor');
+        arrow.setAttribute('stroke-width', '2');
+        arrow.setAttribute('stroke-linecap', 'round');
+        arrow.setAttribute('stroke-linejoin', 'round');
+        var arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrowPath.setAttribute('d', 'm9 18 6-6-6-6');
+        arrow.appendChild(arrowPath);
+        label.appendChild(arrow);
+        a.appendChild(label);
+      } else {
+        a.textContent = entry.label || '사이트 보기';
+      }
       container.appendChild(a);
     });
     container.style.display = links.length ? '' : 'none';
@@ -143,8 +245,6 @@
       }
     }
 
-    // 갤러리 캡션(썸네일)에는 짧은 제목을 걸어두고, 모달에서는 실제 프로젝트명을
-    // 보여주고 싶을 때 데이터에 "title"을 지정하면 캡션 h2 대신 이걸 쓴다.
     if (data.title) titleEl.textContent = data.title;
 
     descGroup.style.display = '';
@@ -161,11 +261,8 @@
       ? data.links
       : (data.link ? [{ href: data.link, label: data.linkLabel || '사이트 보기' }] : []);
     renderLinkButtons(linksEl, links);
-    // 화면을 스크롤해도 항상 눈에 띄어야 하는 링크 버튼(피그마/퍼블리싱 파일 보기 등) —
-    // 링크가 있는 항목에서만 표시. .modal__scroll처럼 transform이 걸린 조상 안에 두면
-    // position:fixed가 뷰포트가 아니라 그 조상 기준으로 묶여버리므로, 이 컨테이너는
-    // 마크업상 .modal__viewport/.modal__scroll 바깥(.modal 바로 아래)에 둬야 한다.
-    renderLinkButtons(fixedLinksEl, links);
+
+    renderLinkButtons(fixedLinksEl, links, true);
 
     whatididGroup.style.display = '';
     var whatidid = Array.isArray(data.whatidid) && data.whatidid.length ? data.whatidid : ['[담당 업무를 입력하세요]'];
@@ -185,6 +282,7 @@
       skillsListEl.appendChild(li);
     });
 
+    sectionVideos = [];
     sectionReveals = [
       renderSection(section2El, data.section2),
       renderSection(section3El, data.section3)
@@ -284,13 +382,6 @@
     scrollResizeObserver.observe(scrollEl);
   }
 
-  // reveal.el(섹션 컨테이너) 전체 면적 기준 threshold로 트리거하면, item2의 12장
-  // 이미지처럼 세로로 아주 길어진 섹션은 전체 면적 대비 20%를 채우기가 사실상
-  // 불가능해 등장 애니메이션이 영영 발동하지 않고 opacity:0에 갇혀버린다(콘텐츠가
-  // 화면에 보이는데도 안 보이는 버그) — 섹션 단위가 아니라 그 안의 각 요소(제목,
-  // 링크 하나하나, 이미지 하나하나)를 개별로 관찰해 뷰포트 하단에 "위치가
-  // 들어오는 순간" 기준으로 트리거하도록 바꿨다. 콘텐츠 길이와 무관하게 항상
-  // 작동하고, 긴 목록은 스크롤에 따라 자연스럽게 하나씩 나타난다.
   function collectRevealTargets(reveal) {
     var targets = [];
     if (reveal.kind === 'links') {
@@ -342,6 +433,45 @@
     });
   }
 
+  var videoObserver = null;
+
+  function setupVideoAutoplay() {
+    if (videoObserver) videoObserver.disconnect();
+    if (!sectionVideos.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') return;
+
+    videoObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          var video = entry.target;
+          if (entry.intersectionRatio >= 0.98) {
+            var playResult = video.play();
+            if (playResult && typeof playResult.catch === 'function') {
+              playResult.catch(function () {});
+            }
+          } else if (entry.intersectionRatio <= 0) {
+            video.pause();
+          }
+        });
+      },
+      { root: viewport, threshold: [0, 0.98] }
+    );
+    sectionVideos.forEach(function (video) {
+      videoObserver.observe(video);
+    });
+  }
+
+  function pauseAllVideos() {
+    if (videoObserver) {
+      videoObserver.disconnect();
+      videoObserver = null;
+    }
+    sectionVideos.forEach(function (video) {
+      video.pause();
+    });
+  }
+
   function pinScroll(lscroll) {
     if (!lscroll.scroll || !lscroll.scroll.instance) return;
     var current = lscroll.scroll.instance.scroll;
@@ -387,6 +517,7 @@
     populate(item);
     lockScroll();
     setupSectionReveals();
+    setupVideoAutoplay();
 
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
@@ -436,10 +567,7 @@
         duration: 0.5,
         ease: 'power2.out',
         onComplete: function () {
-          // GSAP는 x 트윈이 끝나도 transform 인라인 스타일을 지우지 않고 남겨둔다
-          // (예: translate(0px, 0px)) — transform은 값이 none이 아니면 항등값이어도
-          // 스택킹 컨텍스트를 만들어서, 다른 곳(.modal__fixed-links 버튼)의
-          // backdrop-filter가 배경을 제대로 못 읽는 원인이 될 수 있어 명시적으로 지운다.
+
           gsap.set(info, { clearProps: 'transform' });
         }
       }, 0.7);
@@ -464,18 +592,13 @@
         gsap.set(fixedLinksEl, { clearProps: 'all' });
         gsap.set(viewport, { clearProps: 'all' });
         smoothScroll.reset();
+        pauseAllVideos();
         unlockScroll();
         if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
         startRect = null;
       }
     });
-    // viewport(= .modal__scroll을 담은 스크롤 뷰포트) 전체를 하나로 페이드아웃한다.
-    // 예전엔 info/media/closeBtn만 개별로 페이드시켰는데, 그러면 지금 화면에
-    // 스크롤되어 보이는 컴포넌트 링크·이미지 갤러리(section2/section3) 콘텐츠는
-    // 애니메이션 대상이 아니라서 페이드 없이 뚝 잘려 사라져 "이미지 부분만
-    // 뒤늦게 닫히는" 것처럼 보였다. viewport 하나만 페이드시키면 지금 스크롤
-    // 위치가 어디든(히어로든 갤러리든) 화면에 보이는 모든 콘텐츠가 한 번에
-    // 자연스럽게 사라진다. 지속시간도 짧게 줄여 닫힘 자체가 굼뜨지 않게 함.
+
     tl.to(viewport, { opacity: 0, duration: 0.28, ease: 'power1.in' }, 0);
     tl.to(closeBtn, { opacity: 0, duration: 0.22 }, 0);
     tl.to(fixedLinksEl, { opacity: 0, duration: 0.22 }, 0);
@@ -513,4 +636,6 @@
   modal.querySelectorAll('[data-modal-close]').forEach(function (el) {
     el.addEventListener('click', closeModal);
   });
+
+  window.__openProjectModal = openModal;
 })();

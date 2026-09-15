@@ -1,8 +1,5 @@
 (function () {
-  // shadcn 레지스트리의 ncdai/line-nav(https://chanhdai.com/components/line-nav)를
-  // 프레임워크 없는 순수 HTML/CSS/JS로 재구현 — 항목 사이에 장식용 구분선 2개를
-  // 넣어 눈금자 같은 리듬을 주고, hover/active 시 선이 24px→40px로 늘어나며
-  // 밝아지는 구조를 그대로 따른다.
+
   var items = Array.prototype.slice.call(document.querySelectorAll('.gallery__item'));
   var nav = document.getElementById('lineNav');
   if (!items.length || !nav) return;
@@ -55,9 +52,6 @@
     }
   });
 
-  // 화면 정중앙의 아주 좁은 세로 밴드(rootMargin으로 좌우를 크게 깎아 만든다)에
-  // 걸치는 슬라이드만 "현재 위치"로 표시 — 버튼 클릭 이동이든 휠/드래그로
-  // 자유 스크롤하든 항상 실제 화면 위치 기준으로 정확하게 갱신된다.
   if (typeof IntersectionObserver !== 'undefined') {
     var observer = new IntersectionObserver(
       function (entries) {
